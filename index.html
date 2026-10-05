@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+<title>AnswerScan Light · 確認専用</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%232565c7'/%3E%3Ctext x='20' y='29' text-anchor='middle' font-size='28' fill='white'%3EA%3C/text%3E%3C/svg%3E">
+<style>:root{font-family:"Yu Gothic UI","Meiryo",system-ui,sans-serif;color:#1c2e46;background:#f2f5f9;font-size:16px}
+.welcome{max-width:860px;margin:45px auto;padding:32px;line-height:1.9}
+.welcome h1{font-size:28px;margin-bottom:18px}
+.welcome ol{padding-left:24px}.welcome li{margin:14px 0}
+.local-note{background:#eaf2ff;padding:16px;border-radius:8px;color:#174eab}
+#open-error{color:#b24413}
+*{box-sizing:border-box}body{margin:0}header{padding:18px 28px;background:white;border-bottom:1px solid #d8e0eb;display:flex;justify-content:space-between;align-items:center;gap:16px}header strong{font-size:24px;letter-spacing:-.5px}.tag{font-size:13px;color:#536985;background:#e9eff8;padding:5px 10px;border-radius:7px;margin-left:12px}main{max-width:1480px;padding:12px 28px 24px;margin:auto}button,.button,select{font:inherit;border:1px solid #bdcadd;border-radius:8px;padding:11px 17px;background:white;color:inherit;cursor:pointer}.button{display:inline-block}button:hover,.button:hover{background:#eef3fb}button:focus-visible,.button:focus-within,select:focus-visible,input:focus-visible{outline:3px solid #91b8f9;outline-offset:2px}.primary{background:#2565c7;color:white;border-color:#2565c7}.primary:hover{background:#184fa5}button:disabled{opacity:.45;cursor:default}.toolbar,.actions{display:flex;gap:10px;flex-wrap:wrap}.guide,.muted{color:#5d7088;font-size:14px;line-height:1.6}nav{display:flex;gap:10px;align-items:center;flex-wrap:wrap}nav button[aria-pressed=true]{background:#dfeaff;border-color:#7fa9ed;color:#174eab}#counts{margin-left:auto;font-size:14px}.navigation{display:flex;gap:20px;align-items:center;margin:16px 0}.navigation label{display:flex;gap:8px;align-items:center}.jump-label{flex:1}#jump{max-width:100%;min-width:230px;flex:1}.review-grid{display:grid;grid-template-columns:minmax(270px,.8fr) minmax(400px,1.2fr);gap:18px}.card{background:white;border:1px solid #d8e0eb;border-radius:12px;padding:20px}.card-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}h1{font-size:21px;margin:0}.small{font-size:13px;padding:6px 10px}.page-wrap{position:relative;width:fit-content;margin:auto;max-width:100%;line-height:0}#page-image{display:block;max-width:100%;max-height:580px;width:auto}#roi{position:absolute;border:2px solid #276ddd;background:#3678db22;pointer-events:none}.crop-wrap{height:210px;background:#f5f7fb;border:1px solid #e0e6f0;display:flex;align-items:center;justify-content:center;border-radius:8px;overflow:hidden;margin:14px 0}#crop-image{max-width:100%;max-height:100%;object-fit:contain;width:100%;height:100%}#value{font:inherit;font-size:30px;width:100%;border:1px solid #a8bad4;border-radius:8px;padding:18px;margin:8px 0}#warning{color:#b24413;min-height:24px;font-size:14px;white-space:pre-line}.actions{justify-content:space-between}.actions button{padding:10px 13px}#summary{font-size:15px}footer{border-top:1px solid #d8e0eb;padding-top:10px;margin-top:18px;font-size:13px;line-height:1.6}#save-state{color:#2455a0}dialog{max-width:95vw;max-height:95vh;border:0;border-radius:12px;padding:18px}dialog::backdrop{background:#17283d99}#large-page{display:block;width:min(1100px,85vw);height:auto;margin-top:16px}[hidden]{display:none!important}@media(max-width:850px){header{flex-direction:column;align-items:stretch}main{padding:12px}.review-grid{grid-template-columns:1fr}.page-card{order:2}#page-image{max-height:400px}.navigation{flex-wrap:wrap}#counts{margin-left:0}.jump-label{min-width:100%}.actions button{flex:1}}
+</style>
+</head>
+<body>
+<header>
+  <div><strong>AnswerScan Light</strong><span class="tag">確認専用 · このPC内で動作</span></div>
+  <div class="toolbar">
+    <label class="button">確認用ファイルを開く<input id="open-package" type="file" accept=".html,text/html" hidden></label>
+    <label id="resume-button" class="button" hidden>途中の確認を開く<input id="resume" type="file" accept=".json,application/json" hidden></label>
+    <button id="save" class="primary" hidden>確認結果を保存</button>
+  </div>
+</header>
+<main>
+  <section id="welcome" class="card welcome">
+    <h1>答案の確認を、ブラウザーだけで。</h1>
+    <p>学籍番号と解答の読み取り値を画像と見比べて確認できます。</p>
+    <ol><li>担当者がAnswerScanで「AnswerScan Light用フォルダーを書き出す」を実行します。</li><li>受け取ったフォルダーの <strong>review.html</strong> を「確認用ファイルを開く」で選んでください。</li><li>確認後に保存したJSONを、担当者へ返します。</li></ol>
+    <p class="local-note">選んだファイルはこのブラウザー内で開きます。答案画像・学籍番号・名簿・確認結果をサーバーへ送信する機能はありません。</p>
+    <p class="muted">公開されているのはアプリ本体だけです。PDFや通常のプロジェクトJSONだけでは画像を表示できないため、確認用フォルダー内のreview.htmlを選びます。受け取ったreview.htmlを直接開けば、オフラインでも使えます。</p>
+    <p id="open-error" role="alert"></p>
+  </section>
+  <div id="workspace" hidden>
+  <p class="guide">画像と読み取り値を見比べて、確認または保留を選びます。Enterで確認して次へ進みます。</p>
+  <nav aria-label="確認対象">
+    <button id="ids" aria-pressed="true">① 学籍番号</button>
+    <button id="answers" aria-pressed="false">② 解答</button>
+    <span id="counts" aria-live="polite"></span>
+  </nav>
+  <div class="navigation">
+    <label>表示 <select id="filter"><option value="all">すべて</option><option value="pending">未確認</option><option value="held">保留</option></select></label>
+    <label class="jump-label">確認する項目 <select id="jump"></select></label>
+  </div>
+  <section id="review" class="review-grid">
+    <div class="card page-card">
+      <div class="card-title">答案全体 <button id="zoom" class="small">全体画像を拡大</button></div>
+      <div class="page-wrap"><img id="page-image" alt="答案全体"><div id="roi" aria-hidden="true"></div></div>
+    </div>
+    <div class="card detail-card">
+      <div class="card-title"><h1 id="title"></h1><span id="state" class="tag"></span></div>
+      <div class="crop-wrap"><img id="crop-image" alt="確認する欄の拡大画像"></div>
+      <p id="candidate" class="muted"></p>
+      <label for="value" id="value-label">確認値</label>
+      <input id="value" type="text" autocomplete="off" spellcheck="false">
+      <p id="help" class="muted"></p>
+      <p id="warning" role="alert"></p>
+      <div class="actions"><button id="previous">前へ</button><button id="hold">保留して次へ</button><button id="confirm" class="primary">確認して次へ</button><button id="next">次へ</button></div>
+    </div>
+  </section>
+  <section id="empty" class="card" hidden><h1>この表示条件の項目はありません</h1><p>「すべて」に切り替えると、確認済みの項目も見直せます。</p></section>
+  <p id="summary" aria-live="polite"></p>
+  <footer>
+    <p id="save-state">変更はブラウザーのメモリーに保持します。こまめに「確認結果を保存」を押してください。</p>
+    <p>保存したJSONを <strong>source.pdfと同じフォルダー</strong> に移し、フォルダー全体を担当者に返してください。再開するときは同じ確認用ファイルを開き、「途中の確認を開く」で保存済みJSONを選びます。</p>
+    <p class="muted">確認用ファイルには個人情報が含まれます。GitHubやChatGPTへ公開・添付しないでください。ファイルの内容はブラウザー内で処理します。</p>
+  </footer>
+  </div>
+</main>
+<dialog id="page-dialog"><button id="close-zoom">閉じる</button><img id="large-page" alt="答案全体の拡大画像"></dialog>
+<script id="review-data" type="application/json">null</script>
+<script>/* Pure review state, shared by the browser UI and offline regression tests. */
+"use strict";
+const AnswerScanReview = (() => {
+  const clone = value => JSON.parse(JSON.stringify(value));
+  const stable = value => JSON.stringify(value, (_key, item) =>
+    item && typeof item === "object" && !Array.isArray(item)
+      ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
+  const canonicalId = (value, length) => {
+    const text = String(value ?? "").normalize("NFKC").replace(/[‐‑‒–—−﹣－]/g, "-").replace(/\s/g, "");
+    if (!new RegExp(`^[0-9]{${length - 1}}-?[0-9]$`).test(text))
+      throw new Error(`学籍番号は${length}桁の数字で入力してください（末尾前のハイフンは省略可）。`);
+    return text.replace("-", "");
+  };
+  const answerText = value => {
+    const text = String(value ?? "").normalize("NFKC").trim().replace(/−/g, "-");
+    const match = text.match(/^([+-]?\d+(?:\.\d+)?)\s*(?:x|×|\*)\s*10\s*\^\s*([+-]?\d+)$/i);
+    return match ? `${match[1]}e${BigInt(match[2]).toString()}` : text;
+  };
+  const pendingAnswer = field => field.review_disposition === "pending" ||
+    (field.review_disposition === "not_required" && field.status !== "ok");
+  const identity = project => {
+    const copy = clone(project);
+    delete copy.web_review;
+    delete copy.id_reviewed_pages;
+    delete copy.review_handoff;
+    if (copy.workflow) delete copy.workflow.excel_saved;
+    for (const entry of copy.student_map.entries)
+      for (const key of ["student_id", "status", "source", "confirmed_at", "candidate", "draft"]) delete entry[key];
+    for (const student of copy.results) for (const field of student.fields)
+      for (const key of ["value", "status", "score", "reasons", "review_disposition"]) delete field[key];
+    return stable(copy);
+  };
+
+  class Session {
+    constructor(project) {
+      this.original = clone(project);
+      this.project = clone(project);
+      this.drafts = new Map();
+      this.dirty = false;
+      this.load(project);
+    }
+    load(value) {
+      try {
+        if (identity(value) !== identity(this.original)) throw new Error();
+        if (!Array.isArray(value.id_reviewed_pages)) throw new Error();
+        const length = value.student_map.student_id_length;
+        if (!Number.isInteger(length) || length < 1) throw new Error();
+        const roster = new Set(value.roster_snapshot.ids);
+        const pages = new Set(value.student_map.entries.map(entry => entry.page));
+        const reviewed = new Set(value.id_reviewed_pages);
+        if (reviewed.size !== value.id_reviewed_pages.length || [...reviewed].some(page => !pages.has(page))) throw new Error();
+        for (const entry of value.student_map.entries) {
+          if (!["confirmed", "candidate", "unresolved"].includes(entry.status)) throw new Error();
+          if (!["manual", "local_ocr", "local_onnx", "local_vlm", "paddle_roster", "previous_recognition", "roster_suggestion", "boxed_ocr", "boxed_roster", "roster_digits", ""].includes(entry.source)) throw new Error();
+          for (const key of ["student_id", "candidate", "draft"])
+            if (entry[key] != null && (typeof entry[key] !== "string" || canonicalId(entry[key], length) !== entry[key])) throw new Error();
+          if (entry.status === "confirmed" && (!roster.has(entry.student_id) || !reviewed.has(entry.page))) throw new Error();
+          if (entry.status !== "confirmed" && entry.student_id != null) throw new Error();
+        }
+        for (const student of value.results) for (const field of student.fields) {
+          if (field.value != null && typeof field.value !== "string") throw new Error();
+          if (!["ok", "uncertain", "unreadable"].includes(field.status)) throw new Error();
+          if (!["not_required", "pending", "confirmed", "held"].includes(field.review_disposition)) throw new Error();
+          if (!Number.isFinite(field.score) || field.score < 0 || field.score > 1 || !Array.isArray(field.reasons) || field.reasons.some(reason => typeof reason !== "string")) throw new Error();
+          if (field.field_id === "student_id") {
+            const entry = value.student_map.entries.find(item => item.page === student.page_number);
+            const expected = entry.status === "confirmed" ? entry.student_id : null;
+            if (field.value !== expected || field.status !== (expected ? "ok" : "uncertain")) throw new Error();
+          }
+          if (field.review_disposition === "confirmed" && field.status !== "ok") throw new Error();
+        }
+        const drafts = value.web_review?.drafts ?? [];
+        if (!Array.isArray(drafts) || drafts.some(pair => !Array.isArray(pair) || pair.length !== 2 || pair.some(text => typeof text !== "string"))) throw new Error();
+        const draftMap = new Map(drafts);
+        if (draftMap.size !== drafts.length) throw new Error();
+        const keys = new Set([...this.items("ids"), ...this.items("answers")].map(item => item.key));
+        if ([...draftMap.keys()].some(key => !keys.has(key))) throw new Error();
+        this.project = clone(value);
+        this.drafts = draftMap;
+        this.dirty = false;
+      } catch (_error) {
+        throw new Error("この答案用の保存済みJSONを選んでください。別の答案・名簿・形式のファイルは開けません。");
+      }
+    }
+    items(mode) {
+      const idField = this.project.template.fields.find(field => field.roi_type === "student_id")?.field_id || "student_id";
+      if (mode === "ids") return this.project.student_map.entries.map(entry => ({
+        key: `id:${entry.page}`, page: entry.page, fieldId: idField, title: "学籍番号", entry,
+      }));
+      return this.project.results.flatMap(student => student.fields.filter(field => field.field_id !== "student_id")
+        .map(field => ({key: `answer:${student.page_number}:${field.field_id}`, page: student.page_number,
+          fieldId: field.field_id, title: field.display_name, field})));
+    }
+    state(item) {
+      if (item.entry) return !this.project.id_reviewed_pages.includes(item.page) ? "pending" :
+        item.entry.status === "confirmed" ? "confirmed" : "held";
+      return pendingAnswer(item.field) ? "pending" : item.field.review_disposition === "held" ? "held" : "confirmed";
+    }
+    text(item) {
+      return this.drafts.has(item.key) ? this.drafts.get(item.key) : item.entry
+        ? item.entry.student_id || item.entry.draft || item.entry.candidate || ""
+        : item.field.value ?? item.field.raw_value ?? "";
+    }
+    draft(item, text) {
+      if (text !== this.text(item)) { this.drafts.set(item.key, text); this.dirty = true; }
+    }
+    changed(item) {
+      this.drafts.delete(item.key);
+      this.project.workflow.excel_saved = false;
+      this.dirty = true;
+    }
+    reviewId(item, value) {
+      const entry = item.entry;
+      entry.student_id = value;
+      entry.status = value ? "confirmed" : "unresolved";
+      entry.source = "manual";
+      entry.confirmed_at = value ? new Date().toISOString() : null;
+      entry.draft = null;
+      if (value) entry.candidate = value;
+      if (!this.project.id_reviewed_pages.includes(item.page)) this.project.id_reviewed_pages.push(item.page);
+      this.project.id_reviewed_pages.sort((a, b) => a - b);
+      for (const student of this.project.results.filter(student => student.page_number === item.page))
+        for (const field of student.fields.filter(field => field.field_id === "student_id")) {
+          field.value = value;
+          field.status = value ? "ok" : "uncertain";
+          field.score = value ? 1 : 0;
+          field.reasons = value ? [] : ["学籍番号未確認"];
+        }
+    }
+    confirm(item, text) {
+      if (item.entry) {
+        const value = canonicalId(text, this.project.student_map.student_id_length);
+        if (!this.project.roster_snapshot.ids.includes(value)) throw new Error("名簿に登録されていない学籍番号です。画像と番号を確認してください。");
+        this.reviewId(item, value);
+      } else {
+        item.field.value = answerText(text) || null;
+        item.field.status = "ok";
+        item.field.score = 1;
+        item.field.reasons = [];
+        item.field.review_disposition = "confirmed";
+      }
+      this.changed(item);
+    }
+    hold(item) {
+      if (item.entry) this.reviewId(item, null);
+      else { item.field.review_disposition = "held"; item.field.reasons = ["保留"]; }
+      // Keep the unsent text as a draft for a later second look.
+      this.project.workflow.excel_saved = false;
+      this.dirty = true;
+    }
+    counts(mode) {
+      const items = this.items(mode);
+      return Object.fromEntries(["pending", "held", "confirmed"].map(state => [state, items.filter(item => this.state(item) === state).length]));
+    }
+    duplicates() {
+      const ids = new Map();
+      for (const entry of this.project.student_map.entries.filter(entry => entry.status === "confirmed")) {
+        if (!ids.has(entry.student_id)) ids.set(entry.student_id, []);
+        ids.get(entry.student_id).push(entry.page);
+      }
+      return [...ids].filter(([_id, pages]) => pages.length > 1)
+        .map(([id, pages]) => `${id}（${pages.join("・")}ページ）`);
+    }
+    export() {
+      const result = clone(this.project);
+      result.review_handoff = true;
+      result.web_review = {version: 1, drafts: [...this.drafts]};
+      return result;
+    }
+  }
+  return {Session, canonicalId, answerText};
+})();
+if (typeof module !== "undefined") module.exports = AnswerScanReview;
+</script>
+<script>/* Read local review files as data. Never insert or execute their HTML. */
+"use strict";
+const AnswerScanPackage = (() => {
+  const image = value => typeof value === "string" && /^data:image\/(?:jpeg|png);base64,[A-Za-z0-9+/]+={0,2}$/.test(value);
+  const rect = value => value && ["x", "y", "width", "height"].every(key => Number.isFinite(value[key])) &&
+    value.x >= 0 && value.y >= 0 && value.width > 0 && value.height > 0 &&
+    value.x + value.width <= 1 && value.y + value.height <= 1;
+  function validate(data) {
+    try {
+      const p = data.project, map = p.student_map;
+      if (p.schema !== "answerscan.project" || p.version !== 1 || p.recognition_mode !== "chatgpt_bridge" ||
+          p.source_pdf !== "source.pdf" || !/^[a-f0-9]{64}$/.test(p.source_pdf_sha256) || !p.workflow ||
+          !Array.isArray(p.results) || !p.results.length || !Array.isArray(p.template.fields) ||
+          map.schema !== "answerscan.student_map" || map.version !== 1 || !Number.isInteger(map.page_count) || map.page_count < 1 ||
+          !Number.isInteger(map.student_id_length) || map.student_id_length < 1 || map.student_id_length > 40 ||
+          !Array.isArray(map.entries) || map.entries.length !== map.page_count || !Array.isArray(p.roster_snapshot.ids) ||
+          !p.roster_snapshot.ids.length || p.roster_snapshot.key !== p.roster_key) throw new Error();
+      const validId = value => typeof value === "string" && new RegExp(`^[0-9]{${map.student_id_length}}$`).test(value);
+      if (p.roster_snapshot.ids.some(value => !validId(value)) || new Set(p.roster_snapshot.ids).size !== p.roster_snapshot.ids.length) throw new Error();
+      const fields = new Map();
+      for (const field of p.template.fields) {
+        if (typeof field.field_id !== "string" || !field.field_id || fields.has(field.field_id) || !rect(field)) throw new Error();
+        fields.set(field.field_id, field);
+      }
+      if (![...fields.values()].some(field => field.roi_type === "student_id")) throw new Error();
+      const expectedPages = new Set(Array.from({length: map.page_count}, (_v, index) => index + 1));
+      const seenEntries = new Set();
+      for (const entry of map.entries) {
+        if (!expectedPages.has(entry.page) || seenEntries.has(entry.page)) throw new Error();
+        seenEntries.add(entry.page);
+      }
+      const seenResults = new Set();
+      for (const student of p.results) {
+        if (!expectedPages.has(student.page_number) || seenResults.has(student.page_number) || !Array.isArray(student.fields)) throw new Error();
+        seenResults.add(student.page_number);
+        const seenFields = new Set();
+        for (const field of student.fields) {
+          if (field.page_number !== student.page_number || typeof field.field_id !== "string" || seenFields.has(field.field_id) ||
+              typeof field.display_name !== "string" || (field.field_id !== "student_id" && fields.get(field.field_id)?.roi_type !== "answer") ||
+              (field.raw_value != null && typeof field.raw_value !== "string")) throw new Error();
+          seenFields.add(field.field_id);
+        }
+      }
+      if (!Array.isArray(data.pages) || data.pages.length !== map.page_count) throw new Error();
+      const seenImages = new Set();
+      for (const page of data.pages) {
+        if (!expectedPages.has(page.page) || seenImages.has(page.page) || !image(page.image) || !Array.isArray(page.crops) ||
+            typeof page.alignment_warning !== "string") throw new Error();
+        seenImages.add(page.page);
+        const cropIds = new Set();
+        for (const crop of page.crops) {
+          const field = fields.get(crop.field_id);
+          if (!field || !["answer", "student_id"].includes(field.roi_type) || cropIds.has(crop.field_id) || !image(crop.image) ||
+              !rect(crop.rect) || ["x", "y", "width", "height"].some(key => crop.rect[key] !== field[key])) throw new Error();
+          cropIds.add(crop.field_id);
+        }
+      }
+      // The same constraints as the existing desktop-compatible review state.
+      new AnswerScanReview.Session(p);
+      return data;
+    } catch (_error) {
+      throw new Error("AnswerScan Light用フォルダー内のreview.htmlを選んでください。ファイルの形式や画像データが不正です。");
+    }
+  }
+  function readHtml(text) {
+    // A non-executing, exact data-block extraction also accepts older exports.
+    const match = String(text).match(/<script id="review-data" type="application\/json">([\s\S]*?)<\/script>/);
+    if (!match) throw new Error("確認用フォルダー内のreview.htmlを選んでください。PDFや通常のプロジェクトJSONは開けません。");
+    try { return validate(JSON.parse(match[1])); }
+    catch (error) { if (error instanceof SyntaxError) throw new Error("確認用ファイルのデータを読み込めません。もう一度書き出してください。"); throw error; }
+  }
+  return {validate, readHtml};
+})();
+if (typeof module !== "undefined") module.exports = AnswerScanPackage;
+</script>
+<script>"use strict";
+(() => {
+  const $ = id => document.getElementById(id);
+  let session = null;
+  let pages = new Map();
+  let mode = "ids", selected = null;
+  const start = data => {
+    AnswerScanPackage.validate(data);
+    const nextSession = new AnswerScanReview.Session(data.project);
+    session = nextSession;
+    pages = new Map(data.pages.map(page => [page.page, page]));
+    mode = session.counts("ids").pending ? "ids" : "answers";
+    selected = null; $("filter").value = "all";
+    $("welcome").hidden = true; $("workspace").hidden = false;
+    $("resume-button").hidden = false; $("save").hidden = false;
+    $("open-error").textContent = "";
+    render();
+  };
+  const stateName = {pending: "未確認", confirmed: "確認済み", held: "保留"};
+  const items = () => session.items(mode);
+  const visible = () => items().filter(item => $("filter").value === "all" || session.state(item) === $("filter").value);
+  const current = () => items().find(item => item.key === selected);
+  const remember = () => { const item = current(); if (item) session.draft(item, $("value").value); };
+  const saveState = () => {
+    $("save-state").textContent = session.dirty
+      ? "未保存の変更があります。「確認結果を保存」でJSONファイルを保存してください。"
+      : "変更はブラウザーのメモリーに保持します。保存したJSONは、source.pdfと同じフォルダーへ移してください。";
+  };
+  function render() {
+    $("ids").setAttribute("aria-pressed", String(mode === "ids"));
+    $("answers").setAttribute("aria-pressed", String(mode === "answers"));
+    const available = visible();
+    if (!available.some(item => item.key === selected)) {
+      selected = (available.find(item => session.state(item) === "pending") || available[0])?.key ?? null;
+    }
+    const counts = session.counts(mode);
+    $("counts").textContent = `確認済み ${counts.confirmed} / ${items().length}　未確認 ${counts.pending}　保留 ${counts.held}`;
+    $("jump").replaceChildren(...available.map(item => {
+      const option = document.createElement("option");
+      option.value = item.key;
+      option.textContent = `${item.page}ページ · ${item.title} · ${stateName[session.state(item)]}`;
+      return option;
+    }));
+    $("jump").value = selected ?? "";
+    $("jump").disabled = !available.length;
+    $("review").hidden = !selected;
+    $("empty").hidden = Boolean(selected);
+    const allCounts = [session.counts("ids"), session.counts("answers")];
+    const pending = allCounts.reduce((sum, count) => sum + count.pending, 0);
+    const held = allCounts.reduce((sum, count) => sum + count.held, 0);
+    $("summary").textContent = pending ? `残り未確認 ${pending}件。途中でも保存して再開できます。` :
+      `未確認の項目はなくなりました。${held ? `保留 ${held}件があります。必要なら見直してください。` : "全項目を確認しました。"}確認結果を保存して返してください。`;
+    const duplicates = session.duplicates();
+    if (duplicates.length) $("summary").textContent += ` 学籍番号が重複しています：${duplicates.join("、")}`;
+    saveState();
+    const item = current();
+    if (!item) return;
+    const page = pages.get(item.page);
+    const crop = page.crops.find(crop => crop.field_id === item.fieldId);
+    $("title").textContent = `${item.page}ページ · ${item.title}`;
+    $("state").textContent = stateName[session.state(item)];
+    $("page-image").src = page.image;
+    $("large-page").src = page.image;
+    $("crop-image").hidden = !crop;
+    if (crop) $("crop-image").src = crop.image;
+    else $("crop-image").removeAttribute("src");
+    $("roi").hidden = !crop;
+    if (crop) Object.assign($("roi").style, {left: `${crop.rect.x * 100}%`, top: `${crop.rect.y * 100}%`,
+      width: `${crop.rect.width * 100}%`, height: `${crop.rect.height * 100}%`});
+    $("value").value = session.text(item);
+    $("value").inputMode = "text";
+    $("candidate").textContent = item.entry ? `候補：${item.entry.candidate || "（候補なし）"}` :
+      `読み取り値：${item.field.raw_value ?? item.field.value ?? "（空欄）"}`;
+    $("help").textContent = item.entry ? `${session.project.student_map.student_id_length}桁の番号を入力します。名簿にない番号は確定できません。` :
+      "空欄の答案は入力を空にして確認できます。判読できない場合は保留にしてください。";
+    $("warning").textContent = [!crop ? "切り取り画像がありません。全体画像で確認してください。" : "", page.alignment_warning,
+      ...(item.field?.reasons || [])].filter(Boolean).join("\n");
+    const index = available.findIndex(item => item.key === selected);
+    $("previous").disabled = index <= 0;
+    $("next").disabled = index >= available.length - 1;
+    $("value").focus(); $("value").select();
+  }
+  function changeMode(next) { remember(); mode = next; selected = null; $("filter").value = "all"; render(); }
+  function move(offset) {
+    remember(); const list = visible(); const index = list.findIndex(item => item.key === selected);
+    selected = list[index + offset]?.key ?? selected; render();
+  }
+  function decide(held) {
+    const item = current(); if (!item) return;
+    remember();
+    try { if (held) session.hold(item); else session.confirm(item, $("value").value); }
+    catch (error) { $("warning").textContent = error.message; $("value").focus(); return; }
+    const list = items(), index = list.findIndex(next => next.key === item.key);
+    selected = [...list.slice(index + 1), ...list.slice(0, index)].find(next => session.state(next) === "pending")?.key ?? item.key;
+    if (mode === "ids" && !session.counts("ids").pending) {
+      mode = "answers"; selected = null; $("filter").value = "all";
+    }
+    render();
+  }
+  $("ids").onclick = () => changeMode("ids");
+  $("answers").onclick = () => changeMode("answers");
+  $("filter").onchange = () => { remember(); selected = null; render(); };
+  $("jump").onchange = () => { remember(); selected = $("jump").value; render(); };
+  $("previous").onclick = () => move(-1);
+  $("next").onclick = () => move(1);
+  $("confirm").onclick = () => decide(false);
+  $("hold").onclick = () => decide(true);
+  $("value").oninput = () => { remember(); saveState(); };
+  $("value").onkeydown = event => { if (event.key === "Enter" && !event.isComposing) { event.preventDefault(); decide(false); } };
+  $("zoom").onclick = () => $("page-dialog").showModal();
+  $("close-zoom").onclick = () => $("page-dialog").close();
+  $("save").onclick = () => {
+    remember();
+    const blob = new Blob([JSON.stringify(session.export(), null, 2) + "\n"], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url; link.download = "review_checked.answerscan-project.json";
+    document.body.append(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    session.dirty = false;
+    $("save-state").textContent = "JSONのダウンロードを開始しました。保存できたことを確認し、source.pdfと同じフォルダーへ移してください。";
+  };
+  $("resume").onchange = async () => {
+    const file = $("resume").files[0]; if (!file) return;
+    if (session.dirty && !window.confirm("未保存の変更があります。先に保存しない場合は失われます。保存済みJSONを開きますか？")) { $("resume").value = ""; return; }
+    try {
+      const payload = JSON.parse(await file.text());
+      session.load(payload); selected = null; $("filter").value = "all";
+      mode = session.counts("ids").pending ? "ids" : "answers"; render();
+    } catch (error) { window.alert(error.message); }
+    $("resume").value = "";
+  };
+  $("open-package").onchange = async () => {
+    const file = $("open-package").files[0]; if (!file) return;
+    if (session?.dirty && !window.confirm("未保存の変更があります。先に保存しない場合は失われます。別の確認用ファイルを開きますか？")) {
+      $("open-package").value = ""; return;
+    }
+    try { start(AnswerScanPackage.readHtml(await file.text())); }
+    catch (error) {
+      if (session) window.alert(error.message);
+      else $("open-error").textContent = error.message;
+    }
+    $("open-package").value = "";
+  };
+  document.addEventListener("keydown", event => {
+    if (session && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") { event.preventDefault(); $("save").click(); }
+  });
+  window.addEventListener("beforeunload", event => { if (session?.dirty) { event.preventDefault(); event.returnValue = ""; } });
+  try {
+    const initial = JSON.parse($("review-data").textContent);
+    if (initial) start(initial);
+  } catch (error) { $("open-error").textContent = error.message; }
+})();
+</script>
+</body>
+</html>

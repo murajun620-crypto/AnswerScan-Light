@@ -1,2 +1,27 @@
-# AnswerScan-Light
-Browser-only local review of student IDs and handwritten answer values. No file uploads.
+# AnswerScan Light
+
+ブラウザーだけで、学籍番号と数値解答の読み取り結果を目視確認するアプリです。
+
+**公開ページ:** https://murajun620-crypto.github.io/AnswerScan-Light/
+
+## 使い方
+
+1. 担当者がAnswerScanで「ファイル → AnswerScan Light用フォルダーを書き出す…」を実行します。氏名を黒塗りにしたPDFと、確認用画像・名簿・読み取り結果をまとめます。
+2. 秘書は公開ページをEdgeかChromeで開き、「確認用ファイルを開く」で、受け取ったフォルダー内の`review.html`を選びます。
+3. 学籍番号と解答を画像と比較して、確認または保留を選びます。Enterでも確認できます。
+4. 「確認結果を保存」で`review_checked.answerscan-project.json`を保存します。Downloads等に保存された場合は、`source.pdf`と同じフォルダーへ移し、フォルダー全体を担当者へ返します。
+5. 担当者はAnswerScanで返却JSONを開き、必要なら保留を再確認してExcelを出力します。
+
+途中から再開する場合は、同じ`review.html`を選んだ後、「途中の確認を開く」で最後に保存したJSONを選びます。未保存の変更はブラウザーを閉じたり再読み込みしたりすると失われるため、こまめに保存してください。
+
+受け取った`review.html`を直接ブラウザーで開けば、オフラインでも使えます。OCR・認識モデル・Pythonのインストールは不要です。
+
+## データの扱い
+
+- 公開されているのは、データの入っていないアプリ本体と説明書だけです。
+- 公開ページを開くための通信はありますが、選んだ確認用ファイルはブラウザー内で読み取ります。答案画像・学籍番号・名簿・確認結果をサーバーに送信する機能はありません。
+- 確認用HTML内のデータ部分だけを読み取り、そのHTML内のスクリプトは実行しません。画像はファイル内の画像データに限定し、外部URLを拒否します。
+- 外部API、アクセス解析、CDN、ブラウザーの永続ストレージ、ローカルサーバーは使用しません。
+- `review.html`、PDF、確認結果JSONは個人情報を含みます。GitHubへ公開したり、ChatGPTへ添付したりしないでください。
+
+このリポジトリの`index.html`に、画面・CSS・JavaScriptの本体を同梱しています。確認作業専用で、OCR・採点設定の変更・Excel出力は担当者のAnswerScanで行います。
