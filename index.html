@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
-<title>AnswerScan Light v0.6.0 · 確認専用</title>
+<title>AnswerScan Light v0.7.0 · 確認専用</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%232565c7'/%3E%3Ctext x='20' y='29' text-anchor='middle' font-size='28' fill='white'%3EA%3C/text%3E%3C/svg%3E">
 <style>:root{font-family:"Yu Gothic UI","Meiryo",system-ui,sans-serif;color:#1c2e46;background:#f2f5f9;font-size:16px}
 .app-brand{display:inline-flex;align-items:baseline;gap:8px;white-space:nowrap}.app-version{font-size:14px;font-weight:500;color:#536985}
@@ -14,12 +14,13 @@
 .welcome ol{padding-left:24px}.welcome li{margin:14px 0}
 .local-note{background:#eaf2ff;padding:16px;border-radius:8px;color:#174eab}
 #open-error{color:#b24413}
+#unlock-password{display:block;width:100%;font:inherit;padding:14px;margin:10px 0 18px;border:1px solid #a8bad4;border-radius:8px}#unlock-error{color:#b24413;min-height:24px}
 *{box-sizing:border-box}body{margin:0}header{padding:18px 28px;background:white;border-bottom:1px solid #d8e0eb;display:flex;justify-content:space-between;align-items:center;gap:16px}header strong{font-size:24px;letter-spacing:-.5px}.tag{font-size:13px;color:#536985;background:#e9eff8;padding:5px 10px;border-radius:7px;margin-left:12px}main{max-width:1480px;padding:12px 28px 24px;margin:auto}button,.button,select{font:inherit;border:1px solid #bdcadd;border-radius:8px;padding:11px 17px;background:white;color:inherit;cursor:pointer}.button{display:inline-block}button:hover,.button:hover{background:#eef3fb}button:focus-visible,.button:focus-within,select:focus-visible,input:focus-visible{outline:3px solid #91b8f9;outline-offset:2px}.primary{background:#2565c7;color:white;border-color:#2565c7}.primary:hover{background:#184fa5}button:disabled{opacity:.45;cursor:default}.toolbar,.actions{display:flex;gap:10px;flex-wrap:wrap}.guide,.muted{color:#5d7088;font-size:14px;line-height:1.6}nav{display:flex;gap:10px;align-items:center;flex-wrap:wrap}nav button[aria-pressed=true]{background:#dfeaff;border-color:#7fa9ed;color:#174eab}#counts{margin-left:auto;font-size:14px}.navigation{display:flex;gap:20px;align-items:center;margin:16px 0}.navigation label{display:flex;gap:8px;align-items:center}.jump-label{flex:1}#jump{max-width:100%;min-width:230px;flex:1}.review-grid{display:grid;grid-template-columns:minmax(270px,.8fr) minmax(400px,1.2fr);gap:18px}.card{background:white;border:1px solid #d8e0eb;border-radius:12px;padding:20px}.card-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}h1{font-size:21px;margin:0}.small{font-size:13px;padding:6px 10px}.page-wrap{position:relative;width:fit-content;margin:auto;max-width:100%;line-height:0}#page-image{display:block;max-width:100%;max-height:580px;width:auto}#roi{position:absolute;border:2px solid #276ddd;background:#3678db22;pointer-events:none}.crop-wrap{height:210px;background:#f5f7fb;border:1px solid #e0e6f0;display:flex;align-items:center;justify-content:center;border-radius:8px;overflow:hidden;margin:14px 0}#crop-image{max-width:100%;max-height:100%;object-fit:contain;width:100%;height:100%}#value{font:inherit;font-size:30px;width:100%;border:1px solid #a8bad4;border-radius:8px;padding:18px;margin:8px 0}#warning{color:#b24413;min-height:24px;font-size:14px;white-space:pre-line}.actions{justify-content:space-between}.actions button{padding:10px 13px}#summary{font-size:15px}footer{border-top:1px solid #d8e0eb;padding-top:10px;margin-top:18px;font-size:13px;line-height:1.6}#save-state{color:#2455a0}dialog{max-width:95vw;max-height:95vh;border:0;border-radius:12px;padding:18px}dialog::backdrop{background:#17283d99}#large-page{display:block;width:min(1100px,85vw);height:auto;margin-top:16px}[hidden]{display:none!important}@media(max-width:850px){header{flex-direction:column;align-items:stretch}main{padding:12px}.review-grid{grid-template-columns:1fr}.page-card{order:2}#page-image{max-height:400px}.navigation{flex-wrap:wrap}#counts{margin-left:0}.jump-label{min-width:100%}.actions button{flex:1}}
 </style>
 </head>
 <body>
 <header>
-  <div class="app-heading"><span class="app-brand"><strong>AnswerScan Light</strong><span id="app-version" class="app-version">v0.6.0</span></span><span class="tag">確認専用 · このPC内で動作</span></div>
+  <div class="app-heading"><span class="app-brand"><strong>AnswerScan Light</strong><span id="app-version" class="app-version">v0.7.0</span></span><span class="tag">確認専用 · このPC内で動作</span></div>
   <div class="toolbar">
     <button id="open-folder">確認用フォルダーを開く</button>
     <label class="button">確認用ファイルを開く<input id="open-package" type="file" accept=".html,text/html" hidden></label>
@@ -28,6 +29,15 @@
   </div>
 </header>
 <main>
+  <section id="unlock-card" class="card welcome" hidden>
+    <h1>開封パスワードを入力</h1>
+    <p>担当者から受け取ったパスワードで、答案と確認結果を開きます。</p>
+    <label for="unlock-password">パスワード</label>
+    <input id="unlock-password" type="password" autocomplete="off" spellcheck="false">
+    <div class="actions"><button id="unlock" class="primary">開く</button><button id="unlock-cancel">キャンセル</button></div>
+    <p id="unlock-error" role="alert"></p>
+    <p class="muted">確認結果も同じパスワードで暗号化して保存します。保存時の再入力は不要です。</p>
+  </section>
   <section id="welcome" class="card welcome">
     <h1>答案の確認を、ブラウザーだけで。</h1>
     <p>学籍番号と解答の読み取り値を画像と見比べて確認できます。</p>
@@ -320,12 +330,88 @@ const AnswerScanPackage = (() => {
     // A non-executing, exact data-block extraction also accepts older exports.
     const match = String(text).match(/<script id="review-data" type="application\/json">([\s\S]*?)<\/script>/);
     if (!match) throw new Error("確認用フォルダー内のreview_ID.htmlを選んでください。PDFや通常のプロジェクトJSONは開けません。");
-    try { return validate(JSON.parse(match[1])); }
+    try {
+      const value = JSON.parse(match[1]);
+      if (typeof AnswerScanCrypto !== "undefined" && AnswerScanCrypto.encrypted(value)) return AnswerScanCrypto.validate(value, "light");
+      return validate(value);
+    }
     catch (error) { if (error instanceof SyntaxError) throw new Error("確認用ファイルのデータを読み込めません。もう一度書き出してください。"); throw error; }
   }
   return {validate, readHtml};
 })();
 if (typeof module !== "undefined") module.exports = AnswerScanPackage;
+</script>
+<script>/* Native Web Crypto only. Keys exist in memory until this tab is closed. */
+"use strict";
+const AnswerScanCrypto = (() => {
+  const schema = "answerscan.encrypted", iterations = 600000;
+  const encrypted = value => value?.schema === schema;
+  const encode = bytes => {
+    let result = "";
+    for (let i = 0; i < bytes.length; i += 32768) result += String.fromCharCode(...bytes.subarray(i, i + 32768));
+    return btoa(result);
+  };
+  const decode = (text, length) => {
+    if (typeof text !== "string" || text.length % 4 || /[^A-Za-z0-9+/=]/.test(text)) throw new Error();
+    const bytes = Uint8Array.from(atob(text), char => char.charCodeAt(0));
+    if (encode(bytes) !== text || (length && bytes.length !== length)) throw new Error();
+    return bytes;
+  };
+  const validate = (value, kind) => {
+    try {
+      if (!encrypted(value) || value.version !== 1 || !["light", "project"].includes(value.kind) ||
+          (kind && value.kind !== kind) || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(value.work_id) ||
+          value.kdf.name !== "PBKDF2-SHA256" || value.kdf.iterations !== iterations ||
+          value.cipher.name !== "AES-256-GCM") throw new Error();
+      decode(value.kdf.salt, 16); decode(value.cipher.nonce, 12);
+      if (decode(value.ciphertext).length < 16) throw new Error();
+      return value;
+    } catch (_error) { throw new Error("対応していない暗号化ファイルか、形式が不正です。"); }
+  };
+  const native = () => {
+    if (!globalThis.crypto?.subtle) throw new Error("暗号化ファイルはEdgeまたはChromeで開いてください。");
+    return globalThis.crypto;
+  };
+  const aad = (kind, context) => new TextEncoder().encode(`AnswerScan|1|${kind}|${context.workId}|${context.salt}|${iterations}`);
+  async function unlock(value, password) {
+    validate(value);
+    if (!password) throw new Error("開封パスワードを入力してください。");
+    const raw = await native().subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
+    const key = await native().subtle.deriveKey({name: "PBKDF2", hash: "SHA-256", salt: decode(value.kdf.salt, 16), iterations},
+      raw, {name: "AES-GCM", length: 256}, false, ["encrypt", "decrypt"]);
+    const context = {workId: value.work_id, salt: value.kdf.salt, key};
+    return {data: await decrypt(value, context, value.kind), context};
+  }
+  async function decrypt(value, context, kind) {
+    validate(value, kind);
+    if (!context || value.work_id !== context.workId || value.kdf.salt !== context.salt)
+      throw new Error("この作業と同じパスワードで保存したファイルを選んでください。");
+    try {
+      const bytes = await native().subtle.decrypt({name: "AES-GCM", iv: decode(value.cipher.nonce, 12),
+        additionalData: aad(kind, context), tagLength: 128}, context.key, decode(value.ciphertext));
+      const data = JSON.parse(new TextDecoder("utf-8", {fatal: true}).decode(bytes));
+      const project = kind === "light" ? data.project : data;
+      if (AnswerScanFiles.workId(project) !== value.work_id) throw new Error();
+      return data;
+    } catch (_error) { throw new Error("パスワードが違うか、暗号化ファイルが破損しています。"); }
+  }
+  async function encrypt(project, context) {
+    if (AnswerScanFiles.workId(project) !== context.workId) throw new Error("作業IDが一致しません。");
+    const nonce = native().getRandomValues(new Uint8Array(12));
+    const bytes = await native().subtle.encrypt({name: "AES-GCM", iv: nonce,
+      additionalData: aad("project", context), tagLength: 128}, context.key, new TextEncoder().encode(JSON.stringify(project)));
+    return {schema, version: 1, kind: "project", work_id: context.workId,
+      kdf: {name: "PBKDF2-SHA256", iterations, salt: context.salt},
+      cipher: {name: "AES-256-GCM", nonce: encode(nonce)}, ciphertext: encode(new Uint8Array(bytes))};
+  }
+  async function project(value, context) {
+    if (encrypted(value)) return decrypt(value, context, "project");
+    if (context) throw new Error("同じパスワードで暗号化した確認結果を選んでください。");
+    return value;
+  }
+  return {encrypted, validate, unlock, decrypt, encrypt, project};
+})();
+if (typeof module !== "undefined") module.exports = AnswerScanCrypto;
 </script>
 <script>/* Explicit access to the selected local package folder. No downloads/storage. */
 "use strict";
@@ -344,11 +430,18 @@ const AnswerScanFiles = (() => {
     return window.showSaveFilePicker({id: "answerscan-review-result", suggestedName: resultName(project),
       types: [{description: "AnswerScan確認結果", accept: {"application/json": [".json"]}}]});
   };
-  async function writeSaved(handle, session, text) {
+  const result = async (value, context) => typeof AnswerScanCrypto === "undefined" ? value : AnswerScanCrypto.project(value, context);
+  async function packageData(value, context) {
+    if (typeof AnswerScanCrypto !== "undefined" && AnswerScanCrypto.encrypted(value))
+      return AnswerScanPackage.validate(await AnswerScanCrypto.decrypt(value, context, "light"));
+    if (context) throw new Error("確認用HTMLの暗号化設定が一致しません。");
+    return value;
+  }
+  async function writeSaved(handle, session, text, context = null) {
     // Never overwrite another job, even when the native dialog allowed it.
     try {
       const saved = await (await handle.getFile()).text();
-      if (saved.trim()) new AnswerScanReview.Session(session.original).load(JSON.parse(saved));
+      if (saved.trim()) new AnswerScanReview.Session(session.original).load(await result(JSON.parse(saved), context));
     } catch (error) {
       if (error.name !== "NotFoundError") throw new Error("選んだ保存先には別の作業のファイルがあります。上書きせず保存を中止しました。");
     }
@@ -372,13 +465,13 @@ const AnswerScanFiles = (() => {
     const file = await matches[0].getFile();
     return {directory, name: file.name, data: AnswerScanPackage.readHtml(await file.text())};
   }
-  async function write(directory, name, session, text) {
+  async function write(directory, name, session, text, context = null) {
     if (!name || /[/\\]/.test(name)) throw new Error("確認用HTMLのファイル名が不正です。");
     // Check the actual HTML in this folder, so a different job is never used
     // as the destination. Read its data block without executing its scripts.
     let original;
     try {
-      original = AnswerScanPackage.readHtml(await (await (await directory.getFileHandle(name)).getFile()).text());
+      original = await packageData(AnswerScanPackage.readHtml(await (await (await directory.getFileHandle(name)).getFile()).text()), context);
       new AnswerScanReview.Session(session.original).load(original.project);
     } catch (_error) { throw new Error("開いている確認用HTMLと同じフォルダーを選んでください。作業が一致しないため保存していません。"); }
     const target = resultName(session.project);
@@ -388,7 +481,7 @@ const AnswerScanFiles = (() => {
       const saved = await (await existing.getFile()).text();
       // A failed first write can leave a newly created empty file. Retrying
       // that file is safe; any nonempty unrelated/invalid result is rejected.
-      if (saved.trim()) new AnswerScanReview.Session(session.original).load(JSON.parse(saved));
+      if (saved.trim()) new AnswerScanReview.Session(session.original).load(await result(JSON.parse(saved), context));
     } catch (error) {
       if (error.name !== "NotFoundError") throw new Error("同名の確認結果がこの作業と一致しません。別ファイルを上書きせず保存を中止しました。");
     }
@@ -409,10 +502,12 @@ if (typeof module !== "undefined") module.exports = AnswerScanFiles;
   let pages = new Map();
   let mode = "ids", selected = null;
   let directory = null, packageName = null, resultHandle = null, saving = false;
-  const start = data => {
+  let encryption = null, opening = false, pendingUnlock = null;
+  const start = (data, context = null) => {
     AnswerScanPackage.validate(data);
     const nextSession = new AnswerScanReview.Session(data.project);
     session = nextSession;
+    encryption = context;
     resultHandle = null;
     pages = new Map(data.pages.map(page => [page.page, page]));
     mode = session.counts("ids").pending ? "ids" : "answers";
@@ -421,6 +516,36 @@ if (typeof module !== "undefined") module.exports = AnswerScanFiles;
     $("resume-button").hidden = false; $("save").hidden = false;
     $("open-error").textContent = "";
     render();
+  };
+  async function openData(value) {
+    if (!AnswerScanCrypto.encrypted(value)) { start(value); return; }
+    AnswerScanCrypto.validate(value, "light");
+    opening = true;
+    $("welcome").hidden = true; $("workspace").hidden = true; $("unlock-card").hidden = false;
+    $("unlock-password").value = ""; $("unlock-error").textContent = ""; $("unlock-password").focus();
+    try {
+      const unlocked = await new Promise((resolve, reject) => { pendingUnlock = {value, resolve, reject}; });
+      start(unlocked.data, unlocked.context);
+    } finally {
+      pendingUnlock = null; opening = false; $("unlock-card").hidden = true;
+      $("unlock-password").value = "";
+      $("welcome").hidden = Boolean(session); $("workspace").hidden = !session;
+    }
+  }
+  $("unlock").onclick = async () => {
+    if (!pendingUnlock) return;
+    const pending = pendingUnlock, password = $("unlock-password").value;
+    $("unlock").disabled = true; $("unlock-error").textContent = "開いています…";
+    try {
+      const unlocked = await AnswerScanCrypto.unlock(pending.value, password);
+      AnswerScanPackage.validate(unlocked.data);
+      if (pendingUnlock === pending) pending.resolve(unlocked);
+    } catch (error) { if (pendingUnlock === pending) $("unlock-error").textContent = error.message; }
+    finally { $("unlock").disabled = false; }
+  };
+  $("unlock-cancel").onclick = () => pendingUnlock?.reject(new DOMException("開封をキャンセルしました。", "AbortError"));
+  $("unlock-password").onkeydown = event => {
+    if (event.key === "Enter" && !event.isComposing) { event.preventDefault(); $("unlock").click(); }
   };
   const stateName = {pending: "未確認", confirmed: "確認済み", held: "保留"};
   const items = () => session.items(mode);
@@ -516,18 +641,20 @@ if (typeof module !== "undefined") module.exports = AnswerScanFiles;
   $("zoom").onclick = () => $("page-dialog").showModal();
   $("close-zoom").onclick = () => $("page-dialog").close();
   $("save").onclick = async () => {
-    if (saving || !session) return;
+    if (saving || opening || !session) return;
     remember();
-    const active = session, text = JSON.stringify(active.export(), null, 2) + "\n";
+    const active = session, snapshot = active.export(), text = JSON.stringify(snapshot, null, 2) + "\n", context = encryption;
     saving = true; $("save").disabled = true;
     try {
       let name, location;
+      // Open the native picker while this click still has user activation.
+      const chosen = directory ? null : (resultHandle || await AnswerScanFiles.pickSave(active.project));
+      const output = context ? JSON.stringify(await AnswerScanCrypto.encrypt(snapshot, context), null, 2) + "\n" : text;
       if (directory) {
-        name = await AnswerScanFiles.write(directory, packageName, active, text);
+        name = await AnswerScanFiles.write(directory, packageName, active, output, context);
         location = `${directory.name} / ${name}（確認用HTMLと同じフォルダー）`;
       } else {
-        const chosen = resultHandle || await AnswerScanFiles.pickSave(active.project);
-        name = await AnswerScanFiles.writeSaved(chosen, active, text);
+        name = await AnswerScanFiles.writeSaved(chosen, active, output, context);
         resultHandle = chosen;
         location = name;
       }
@@ -535,7 +662,7 @@ if (typeof module !== "undefined") module.exports = AnswerScanFiles;
         // Edits made while the file was being written are still unsaved.
         if (text === JSON.stringify(active.export(), null, 2) + "\n") active.dirty = false;
         $("save-state").textContent = active.dirty ? "保存中に追加の変更がありました。もう一度保存してください。"
-          : `保存しました：${location}`;
+          : `保存しました：${location}${context ? "（同じパスワードで暗号化）" : ""}`;
       }
     } catch (error) {
       $("save-state").textContent = error.name === "AbortError" ? "保存をキャンセルしました。変更は未保存です。"
@@ -543,35 +670,36 @@ if (typeof module !== "undefined") module.exports = AnswerScanFiles;
     } finally { saving = false; $("save").disabled = false; }
   };
   $("open-folder").onclick = async () => {
-    if (saving) return;
+    if (saving || opening) return;
     if (session?.dirty && !window.confirm("未保存の変更があります。別のフォルダーを開くと失われます。続けますか？")) return;
     try {
       const chosen = await AnswerScanFiles.pick();
       const opened = await AnswerScanFiles.open(chosen);
-      start(opened.data); directory = chosen; packageName = opened.name;
+      await openData(opened.data); directory = chosen; packageName = opened.name;
     } catch (error) {
       if (error.name !== "AbortError") { if (session) window.alert(error.message); else $("open-error").textContent = error.message; }
     }
   };
   $("resume").onchange = async () => {
-    if (saving) { $("resume").value = ""; return; }
+    if (saving || opening) { $("resume").value = ""; return; }
     const file = $("resume").files[0]; if (!file) return;
     if (session.dirty && !window.confirm("未保存の変更があります。先に保存しない場合は失われます。保存済みJSONを開きますか？")) { $("resume").value = ""; return; }
     try {
-      const payload = JSON.parse(await file.text());
+      const payload = await AnswerScanCrypto.project(JSON.parse(await file.text()), encryption);
       session.load(payload); selected = null; $("filter").value = "all";
       mode = session.counts("ids").pending ? "ids" : "answers"; render();
     } catch (error) { window.alert(error.message); }
     $("resume").value = "";
   };
   $("open-package").onchange = async () => {
-    if (saving) { $("open-package").value = ""; return; }
+    if (saving || opening) { $("open-package").value = ""; return; }
     const file = $("open-package").files[0]; if (!file) return;
     if (session?.dirty && !window.confirm("未保存の変更があります。先に保存しない場合は失われます。別の確認用ファイルを開きますか？")) {
       $("open-package").value = ""; return;
     }
-    try { start(AnswerScanPackage.readHtml(await file.text())); directory = null; packageName = file.name; }
+    try { await openData(AnswerScanPackage.readHtml(await file.text())); directory = null; packageName = file.name; }
     catch (error) {
+      if (error.name === "AbortError") { $("open-package").value = ""; return; }
       if (session) window.alert(error.message);
       else $("open-error").textContent = error.message;
     }
@@ -581,14 +709,14 @@ if (typeof module !== "undefined") module.exports = AnswerScanFiles;
     if (session && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") { event.preventDefault(); $("save").click(); }
   });
   window.addEventListener("beforeunload", event => { if (session?.dirty || saving) { event.preventDefault(); event.returnValue = ""; } });
-  try {
+  (async () => { try {
     const initial = JSON.parse($("review-data").textContent);
     if (initial) {
-      start(initial);
+      await openData(initial);
       packageName = location.protocol === "file:" ? decodeURIComponent(location.pathname.split("/").pop())
-        : (initial.project.work_id ? AnswerScanFiles.htmlName(initial.project) : "review.html");
+        : (session.project.work_id ? AnswerScanFiles.htmlName(session.project) : "review.html");
     }
-  } catch (error) { $("open-error").textContent = error.message; }
+  } catch (error) { $("open-error").textContent = error.name === "AbortError" ? "開封をキャンセルしました。確認用ファイルを選んで再度開けます。" : error.message; } })();
 })();
 </script>
 </body>
