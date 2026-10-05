@@ -4,9 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
-<title>AnswerScan Light · 確認専用</title>
+<title>AnswerScan Light v0.4.0 · 確認専用</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%232565c7'/%3E%3Ctext x='20' y='29' text-anchor='middle' font-size='28' fill='white'%3EA%3C/text%3E%3C/svg%3E">
 <style>:root{font-family:"Yu Gothic UI","Meiryo",system-ui,sans-serif;color:#1c2e46;background:#f2f5f9;font-size:16px}
+.app-brand{display:inline-flex;align-items:baseline;gap:8px;white-space:nowrap}.app-version{font-size:14px;font-weight:500;color:#536985}
+.app-heading{display:flex;align-items:baseline;gap:8px 12px;flex-wrap:wrap}.app-heading .tag{margin-left:0;white-space:nowrap}
 .welcome{max-width:860px;margin:45px auto;padding:32px;line-height:1.9}
 .welcome h1{font-size:28px;margin-bottom:18px}
 .welcome ol{padding-left:24px}.welcome li{margin:14px 0}
@@ -17,7 +19,7 @@
 </head>
 <body>
 <header>
-  <div><strong>AnswerScan Light</strong><span class="tag">確認専用 · このPC内で動作</span></div>
+  <div class="app-heading"><span class="app-brand"><strong>AnswerScan Light</strong><span id="app-version" class="app-version">v0.4.0</span></span><span class="tag">確認専用 · このPC内で動作</span></div>
   <div class="toolbar">
     <button id="open-folder">確認用フォルダーを開く</button>
     <label class="button">確認用ファイルを開く<input id="open-package" type="file" accept=".html,text/html" hidden></label>
