@@ -361,7 +361,10 @@ const AnswerScanFiles = (() => {
     // A matching result can be updated; a renamed unrelated file cannot.
     try {
       const existing = await directory.getFileHandle(target);
-      new AnswerScanReview.Session(session.original).load(JSON.parse(await (await existing.getFile()).text()));
+      const saved = await (await existing.getFile()).text();
+      // A failed first write can leave a newly created empty file. Retrying
+      // that file is safe; any nonempty unrelated/invalid result is rejected.
+      if (saved.trim()) new AnswerScanReview.Session(session.original).load(JSON.parse(saved));
     } catch (error) {
       if (error.name !== "NotFoundError") throw new Error("同名の確認結果がこの作業と一致しません。別ファイルを上書きせず保存を中止しました。");
     }
