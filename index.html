@@ -19,6 +19,7 @@
 <header>
   <div><strong>AnswerScan Light</strong><span class="tag">確認専用 · このPC内で動作</span></div>
   <div class="toolbar">
+    <button id="open-folder">確認用フォルダーを開く</button>
     <label class="button">確認用ファイルを開く<input id="open-package" type="file" accept=".html,text/html" hidden></label>
     <label id="resume-button" class="button" hidden>途中の確認を開く<input id="resume" type="file" accept=".json,application/json" hidden></label>
     <button id="save" class="primary" hidden>確認結果を保存</button>
@@ -28,9 +29,9 @@
   <section id="welcome" class="card welcome">
     <h1>答案の確認を、ブラウザーだけで。</h1>
     <p>学籍番号と解答の読み取り値を画像と見比べて確認できます。</p>
-    <ol><li>担当者がAnswerScanで「AnswerScan Light用フォルダーを書き出す」を実行します。</li><li>受け取ったフォルダーの <strong>review.html</strong> を「確認用ファイルを開く」で選んでください。</li><li>確認後に保存したJSONを、担当者へ返します。</li></ol>
+    <ol><li>担当者がAnswerScanで「AnswerScan Light用フォルダーを書き出す」を実行します。</li><li>EdgeまたはChromeで「確認用フォルダーを開く」を押し、受け取ったフォルダーを選んでください。</li><li>確認結果のJSONはHTMLと同じフォルダーに保存します。フォルダー全体を担当者へ返します。</li></ol>
     <p class="local-note">選んだファイルはこのブラウザー内で開きます。答案画像・学籍番号・名簿・確認結果をサーバーへ送信する機能はありません。</p>
-    <p class="muted">公開されているのはアプリ本体だけです。PDFや通常のプロジェクトJSONだけでは画像を表示できないため、確認用フォルダー内のreview.htmlを選びます。受け取ったreview.htmlを直接開けば、オフラインでも使えます。</p>
+    <p class="muted">公開されているのはアプリ本体だけです。確認用フォルダーにはreview_ID.htmlが入っています。HTMLを直接開いてオフラインでも使えます。その場合は最初の保存時に、HTMLが入ったフォルダーを選びます。旧版のreview.htmlも開けます。</p>
     <p id="open-error" role="alert"></p>
   </section>
   <div id="workspace" hidden>
@@ -64,7 +65,7 @@
   <p id="summary" aria-live="polite"></p>
   <footer>
     <p id="save-state">変更はブラウザーのメモリーに保持します。こまめに「確認結果を保存」を押してください。</p>
-    <p>保存したJSONを <strong>source.pdfと同じフォルダー</strong> に移し、フォルダー全体を担当者に返してください。再開するときは同じ確認用ファイルを開き、「途中の確認を開く」で保存済みJSONを選びます。</p>
+    <p>保存先は<strong>確認用HTMLと同じフォルダー</strong>です。checked_ID.answerscan-project.jsonを書き込み、フォルダー全体を担当者に返してください。再開するときは同じフォルダーを開き、「途中の確認を開く」で保存済みJSONを選びます。</p>
     <p class="muted">確認用ファイルには個人情報が含まれます。GitHubやChatGPTへ公開・添付しないでください。ファイルの内容はブラウザー内で処理します。</p>
   </footer>
   </div>
@@ -172,7 +173,7 @@ const AnswerScanReview = (() => {
     text(item) {
       return this.drafts.has(item.key) ? this.drafts.get(item.key) : item.entry
         ? item.entry.student_id || item.entry.draft || item.entry.candidate || ""
-        : item.field.value ?? item.field.raw_value ?? "";
+        : item.field.review_disposition === "confirmed" ? item.field.value ?? "" : item.field.value ?? item.field.raw_value ?? "";
     }
     draft(item, text) {
       if (text !== this.text(item)) { this.drafts.set(item.key, text); this.dirty = true; }
@@ -256,7 +257,8 @@ const AnswerScanPackage = (() => {
     try {
       const p = data.project, map = p.student_map;
       if (p.schema !== "answerscan.project" || p.version !== 1 || p.recognition_mode !== "chatgpt_bridge" ||
-          p.source_pdf !== "source.pdf" || !/^[a-f0-9]{64}$/.test(p.source_pdf_sha256) || !p.workflow ||
+          !(p.source_pdf === "source.pdf" || (typeof p.work_id === "string" && /^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(p.work_id) && p.source_pdf === `source_${p.work_id}.pdf`)) ||
+          (p.work_id != null && (typeof p.work_id !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(p.work_id))) || !/^[a-f0-9]{64}$/.test(p.source_pdf_sha256) || !p.workflow ||
           !Array.isArray(p.results) || !p.results.length || !Array.isArray(p.template.fields) ||
           map.schema !== "answerscan.student_map" || map.version !== 1 || !Number.isInteger(map.page_count) || map.page_count < 1 ||
           !Number.isInteger(map.student_id_length) || map.student_id_length < 1 || map.student_id_length > 40 ||
@@ -306,13 +308,13 @@ const AnswerScanPackage = (() => {
       new AnswerScanReview.Session(p);
       return data;
     } catch (_error) {
-      throw new Error("AnswerScan Light用フォルダー内のreview.htmlを選んでください。ファイルの形式や画像データが不正です。");
+      throw new Error("AnswerScan Light用フォルダー内のreview_ID.htmlを選んでください。ファイルの形式や画像データが不正です。");
     }
   }
   function readHtml(text) {
     // A non-executing, exact data-block extraction also accepts older exports.
     const match = String(text).match(/<script id="review-data" type="application\/json">([\s\S]*?)<\/script>/);
-    if (!match) throw new Error("確認用フォルダー内のreview.htmlを選んでください。PDFや通常のプロジェクトJSONは開けません。");
+    if (!match) throw new Error("確認用フォルダー内のreview_ID.htmlを選んでください。PDFや通常のプロジェクトJSONは開けません。");
     try { return validate(JSON.parse(match[1])); }
     catch (error) { if (error instanceof SyntaxError) throw new Error("確認用ファイルのデータを読み込めません。もう一度書き出してください。"); throw error; }
   }
@@ -320,12 +322,66 @@ const AnswerScanPackage = (() => {
 })();
 if (typeof module !== "undefined") module.exports = AnswerScanPackage;
 </script>
+<script>/* Explicit access to the selected local package folder. No downloads/storage. */
+"use strict";
+const AnswerScanFiles = (() => {
+  const validId = value => typeof value === "string" && /^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(value);
+  const workId = project => {
+    if (validId(project.work_id)) return project.work_id;
+    if (/^[a-f0-9]{64}$/.test(project.source_pdf_sha256)) return "AS-" + project.source_pdf_sha256.slice(0, 12).toUpperCase();
+    throw new Error("作業IDを確認できません。確認用フォルダーを再度書き出してください。");
+  };
+  const htmlName = project => `review_${workId(project)}.html`;
+  const resultName = project => `checked_${workId(project)}.answerscan-project.json`;
+  const pick = () => {
+    if (typeof window.showDirectoryPicker !== "function")
+      throw new Error("同じフォルダーへの保存にはEdgeまたはChromeで開いてください。「確認用フォルダーを開く」でHTMLが入ったフォルダーを選びます。");
+    return window.showDirectoryPicker({id: "answerscan-review", mode: "readwrite"});
+  };
+  async function open(directory) {
+    const matches = [];
+    for await (const handle of directory.values()) {
+      if (handle.kind === "file" && /^review(?:_[A-Za-z0-9_-]+)?\.html$/i.test(handle.name)) matches.push(handle);
+    }
+    if (matches.length !== 1)
+      throw new Error("確認用HTMLが1つ入ったフォルダーを選んでください。複数ある場合は作業ごとに分けてください。");
+    const file = await matches[0].getFile();
+    return {directory, name: file.name, data: AnswerScanPackage.readHtml(await file.text())};
+  }
+  async function write(directory, name, session, text) {
+    if (!name || /[/\\]/.test(name)) throw new Error("確認用HTMLのファイル名が不正です。");
+    // Check the actual HTML in this folder, so a different job is never used
+    // as the destination. Read its data block without executing its scripts.
+    let original;
+    try {
+      original = AnswerScanPackage.readHtml(await (await (await directory.getFileHandle(name)).getFile()).text());
+      new AnswerScanReview.Session(session.original).load(original.project);
+    } catch (_error) { throw new Error("開いている確認用HTMLと同じフォルダーを選んでください。作業が一致しないため保存していません。"); }
+    const target = resultName(session.project);
+    // A matching result can be updated; a renamed unrelated file cannot.
+    try {
+      const existing = await directory.getFileHandle(target);
+      new AnswerScanReview.Session(session.original).load(JSON.parse(await (await existing.getFile()).text()));
+    } catch (error) {
+      if (error.name !== "NotFoundError") throw new Error("同名の確認結果がこの作業と一致しません。別ファイルを上書きせず保存を中止しました。");
+    }
+    const handle = await directory.getFileHandle(target, {create: true});
+    const stream = await handle.createWritable();
+    try { await stream.write(text); await stream.close(); }
+    catch (error) { try { await stream.abort(); } catch (_ignored) {} throw error; }
+    return target;
+  }
+  return {validId, workId, htmlName, resultName, pick, open, write};
+})();
+if (typeof module !== "undefined") module.exports = AnswerScanFiles;
+</script>
 <script>"use strict";
 (() => {
   const $ = id => document.getElementById(id);
   let session = null;
   let pages = new Map();
   let mode = "ids", selected = null;
+  let directory = null, packageName = null, saving = false;
   const start = data => {
     AnswerScanPackage.validate(data);
     const nextSession = new AnswerScanReview.Session(data.project);
@@ -346,7 +402,7 @@ if (typeof module !== "undefined") module.exports = AnswerScanPackage;
   const saveState = () => {
     $("save-state").textContent = session.dirty
       ? "未保存の変更があります。「確認結果を保存」でJSONファイルを保存してください。"
-      : "変更はブラウザーのメモリーに保持します。保存したJSONは、source.pdfと同じフォルダーへ移してください。";
+      : "保存先は確認用HTMLと同じフォルダーです。未保存で閉じると警告を表示します。こまめに保存してください。";
   };
   function render() {
     $("ids").setAttribute("aria-pressed", String(mode === "ids"));
@@ -431,18 +487,39 @@ if (typeof module !== "undefined") module.exports = AnswerScanPackage;
   $("value").onkeydown = event => { if (event.key === "Enter" && !event.isComposing) { event.preventDefault(); decide(false); } };
   $("zoom").onclick = () => $("page-dialog").showModal();
   $("close-zoom").onclick = () => $("page-dialog").close();
-  $("save").onclick = () => {
+  $("save").onclick = async () => {
+    if (saving || !session) return;
     remember();
-    const blob = new Blob([JSON.stringify(session.export(), null, 2) + "\n"], {type: "application/json"});
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url; link.download = "review_checked.answerscan-project.json";
-    document.body.append(link); link.click(); link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-    session.dirty = false;
-    $("save-state").textContent = "JSONのダウンロードを開始しました。保存できたことを確認し、source.pdfと同じフォルダーへ移してください。";
+    const active = session, text = JSON.stringify(active.export(), null, 2) + "\n";
+    saving = true; $("save").disabled = true;
+    try {
+      const chosen = directory || await AnswerScanFiles.pick();
+      const name = await AnswerScanFiles.write(chosen, packageName, active, text);
+      if (session === active) {
+        directory = chosen;
+        // Edits made while the file was being written are still unsaved.
+        if (text === JSON.stringify(active.export(), null, 2) + "\n") active.dirty = false;
+        $("save-state").textContent = active.dirty ? "保存中に追加の変更がありました。もう一度保存してください。"
+          : `保存しました：${chosen.name} / ${name}（確認用HTMLと同じフォルダー）`;
+      }
+    } catch (error) {
+      $("save-state").textContent = error.name === "AbortError" ? "保存をキャンセルしました。変更は未保存です。"
+        : `保存できませんでした。変更は未保存です。${error.message}`;
+    } finally { saving = false; $("save").disabled = false; }
+  };
+  $("open-folder").onclick = async () => {
+    if (saving) return;
+    if (session?.dirty && !window.confirm("未保存の変更があります。別のフォルダーを開くと失われます。続けますか？")) return;
+    try {
+      const chosen = await AnswerScanFiles.pick();
+      const opened = await AnswerScanFiles.open(chosen);
+      start(opened.data); directory = chosen; packageName = opened.name;
+    } catch (error) {
+      if (error.name !== "AbortError") { if (session) window.alert(error.message); else $("open-error").textContent = error.message; }
+    }
   };
   $("resume").onchange = async () => {
+    if (saving) { $("resume").value = ""; return; }
     const file = $("resume").files[0]; if (!file) return;
     if (session.dirty && !window.confirm("未保存の変更があります。先に保存しない場合は失われます。保存済みJSONを開きますか？")) { $("resume").value = ""; return; }
     try {
@@ -453,11 +530,12 @@ if (typeof module !== "undefined") module.exports = AnswerScanPackage;
     $("resume").value = "";
   };
   $("open-package").onchange = async () => {
+    if (saving) { $("open-package").value = ""; return; }
     const file = $("open-package").files[0]; if (!file) return;
     if (session?.dirty && !window.confirm("未保存の変更があります。先に保存しない場合は失われます。別の確認用ファイルを開きますか？")) {
       $("open-package").value = ""; return;
     }
-    try { start(AnswerScanPackage.readHtml(await file.text())); }
+    try { start(AnswerScanPackage.readHtml(await file.text())); directory = null; packageName = file.name; }
     catch (error) {
       if (session) window.alert(error.message);
       else $("open-error").textContent = error.message;
@@ -467,10 +545,14 @@ if (typeof module !== "undefined") module.exports = AnswerScanPackage;
   document.addEventListener("keydown", event => {
     if (session && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") { event.preventDefault(); $("save").click(); }
   });
-  window.addEventListener("beforeunload", event => { if (session?.dirty) { event.preventDefault(); event.returnValue = ""; } });
+  window.addEventListener("beforeunload", event => { if (session?.dirty || saving) { event.preventDefault(); event.returnValue = ""; } });
   try {
     const initial = JSON.parse($("review-data").textContent);
-    if (initial) start(initial);
+    if (initial) {
+      start(initial);
+      packageName = location.protocol === "file:" ? decodeURIComponent(location.pathname.split("/").pop())
+        : (initial.project.work_id ? AnswerScanFiles.htmlName(initial.project) : "review.html");
+    }
   } catch (error) { $("open-error").textContent = error.message; }
 })();
 </script>
