@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
-<title>AnswerScan Light v0.9.1 · 確認専用</title>
+<title>AnswerScan Light v0.10.0 · 確認専用</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%232565c7'/%3E%3Ctext x='20' y='29' text-anchor='middle' font-size='28' fill='white'%3EA%3C/text%3E%3C/svg%3E">
 <style>:root{font-family:"Yu Gothic UI","Meiryo",system-ui,sans-serif;color:#1c2e46;background:#f2f5f9;font-size:16px}
 .app-brand{display:inline-flex;align-items:baseline;gap:8px;white-space:nowrap}.app-version{font-size:14px;font-weight:500;color:#536985}
@@ -20,7 +20,8 @@
 </head>
 <body>
 <header>
-  <div class="app-heading"><span class="app-brand"><strong>AnswerScan Light</strong><span id="app-version" class="app-version">v0.9.1</span></span><span class="tag">確認専用 · このPC内で動作</span></div>
+  <div class="app-heading"><span class="app-brand"><strong>AnswerScan Light</strong><span id="app-version" class="app-version">v0.10.0</span></span><span class="tag">確認専用 · このPC内で動作</span></div>
+  <div id="project-name" class="muted" hidden></div>
   <div class="toolbar">
     <button id="open-folder">確認用フォルダーを開く</button>
     <label class="button">確認用ファイルを開く<input id="open-package" type="file" accept=".html,text/html" hidden></label>
@@ -43,7 +44,7 @@
     <p>学籍番号と解答の読み取り値を画像と見比べて確認できます。</p>
     <ol><li>担当者がAnswerScanで「AnswerScan Light用HTMLを書き出す」を実行し、HTMLを1つ渡します。</li><li>EdgeまたはChromeで「確認用ファイルを開く」から受け取ったHTMLを選んでください。PDFや元のJSONは不要です。</li><li>確認結果を保存し、できたJSONだけを担当者へ返します。初回はファイル名が入力済みの保存画面で、HTMLと同じフォルダーを選びます。</li></ol>
     <p class="local-note">選んだファイルはこのブラウザー内で開きます。答案画像・学籍番号・名簿・確認結果をサーバーへ送信する機能はありません。</p>
-    <p class="muted">公開されているのはアプリ本体だけです。元PDF名.ASL_review.htmlを直接開いてオフラインでも使えます。旧版のreview_ID.htmlやreview.htmlも開けます。「確認用フォルダーを開く」から開いた場合は、そのフォルダーへ直接保存します。</p>
+    <p class="muted">公開されているのはアプリ本体だけです。プロジェクト名_ID.ASL_review.htmlを直接開いてオフラインでも使えます。旧版のreview_ID.htmlやreview.htmlも開けます。「確認用フォルダーを開く」から開いた場合は、そのフォルダーへ直接保存します。</p>
     <p id="open-error" role="alert"></p>
   </section>
   <div id="workspace" hidden>
@@ -77,7 +78,7 @@
   <p id="summary" aria-live="polite"></p>
   <footer>
     <p id="save-state">変更はブラウザーのメモリーに保持します。こまめに「確認結果を保存」を押してください。</p>
-    <p>初回はファイル名が入力済みの保存画面で<strong>HTMLと同じフォルダー</strong>を選びます。2回目以降は同じファイルへ保存します。checked_ID.answerscan-project.jsonだけを担当者に返してください。再開するときはHTMLを開き、「途中の確認を開く」で保存済みJSONを選びます。</p>
+    <p>初回はファイル名が入力済みの保存画面で<strong>HTMLと同じフォルダー</strong>を選びます。2回目以降は同じファイルへ保存します。プロジェクト名_checked_ID.answerscan-project.jsonだけを担当者に返してください。再開するときはHTMLを開き、「途中の確認を開く」で保存済みJSONを選びます。</p>
     <p class="muted">確認用ファイルには個人情報が含まれます。GitHubやChatGPTへ公開・添付しないでください。ファイルの内容はブラウザー内で処理します。</p>
   </footer>
   </div>
@@ -261,6 +262,13 @@ if (typeof module !== "undefined") module.exports = AnswerScanReview;
 <script>/* Read local review files as data. Never insert or execute their HTML. */
 "use strict";
 const AnswerScanPackage = (() => {
+  // Keep package validation usable independently of the file-picker module.
+  const projectPrefix = p => {
+    if (!p.project_name) return "";
+    let name = p.project_name.trim().replace(/[<>:"/\\|?*\x00-\x1f]/g, "_").replace(/[ .]+$/, "");
+    if (/^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\..*)?$/i.test(name)) name = "_" + name;
+    return (name || "AnswerScan") + "_";
+  };
   const image = value => typeof value === "string" && /^data:image\/(?:jpeg|png);base64,[A-Za-z0-9+/]+={0,2}$/.test(value);
   const rect = value => value && ["x", "y", "width", "height"].every(key => Number.isFinite(value[key])) &&
     value.x >= 0 && value.y >= 0 && value.width > 0 && value.height > 0 &&
@@ -272,7 +280,8 @@ const AnswerScanPackage = (() => {
         typeof p.source_pdf === "string" && !/[/\\:]/.test(p.source_pdf) && /\.pdf$/i.test(p.source_pdf) &&
         typeof p.light_review.html_name === "string" && !/[/\\:]/.test(p.light_review.html_name) && /\.html$/i.test(p.light_review.html_name);
       if (p.schema !== "answerscan.project" || p.version !== 1 || p.recognition_mode !== "chatgpt_bridge" ||
-          !(single || p.source_pdf === "source.pdf" || (typeof p.work_id === "string" && /^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(p.work_id) && p.source_pdf === `source_${p.work_id}.pdf`)) ||
+          (p.project_name != null && (typeof p.project_name !== "string" || [...p.project_name].length > 80 || /[\x00-\x1f]/.test(p.project_name))) ||
+          !(single || p.source_pdf === "source.pdf" || (typeof p.work_id === "string" && /^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(p.work_id) && p.source_pdf === `${projectPrefix(p)}source_${p.work_id}.pdf`)) ||
           (p.work_id != null && (typeof p.work_id !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(p.work_id))) || !/^[a-f0-9]{64}$/.test(p.source_pdf_sha256) || !p.workflow ||
           !Array.isArray(p.results) || !p.results.length || !Array.isArray(p.template.fields) ||
           map.schema !== "answerscan.student_map" || map.version !== 1 || !Number.isInteger(map.page_count) || map.page_count < 1 ||
@@ -422,8 +431,14 @@ const AnswerScanFiles = (() => {
     if (/^[a-f0-9]{64}$/.test(project.source_pdf_sha256)) return "AS-" + project.source_pdf_sha256.slice(0, 12).toUpperCase();
     throw new Error("作業IDを確認できません。確認用フォルダーを再度書き出してください。");
   };
-  const htmlName = project => project.light_review?.html_name || `review_${workId(project)}.html`;
-  const resultName = project => `checked_${workId(project)}.answerscan-project.json`;
+  const projectPrefix = project => {
+    if (!project.project_name) return "";
+    let name = project.project_name.trim().replace(/[<>:"/\\|?*\x00-\x1f]/g, "_").replace(/[ .]+$/, "");
+    if (/^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\..*)?$/i.test(name)) name = "_" + name;
+    return (name || "AnswerScan") + "_";
+  };
+  const htmlName = project => project.light_review?.html_name || `${projectPrefix(project)}review_${workId(project)}.html`;
+  const resultName = project => `${projectPrefix(project)}checked_${workId(project)}.answerscan-project.json`;
   const pickSave = project => {
     if (typeof window.showSaveFilePicker !== "function")
       throw new Error("ファイル名を入力済みの保存画面にはEdgeまたはChromeを使ってください。HTMLと同じフォルダーを選んで保存します。");
@@ -458,7 +473,7 @@ const AnswerScanFiles = (() => {
   async function open(directory) {
     const matches = [];
     for await (const handle of directory.values()) {
-      if (handle.kind === "file" && (/^review(?:_[A-Za-z0-9_-]+)?\.html$/i.test(handle.name) || /\.ASL_review\.html$/i.test(handle.name))) matches.push(handle);
+      if (handle.kind === "file" && (/(?:^|_)review(?:_[A-Za-z0-9_-]+)?\.html$/i.test(handle.name) || /\.ASL_review\.html$/i.test(handle.name))) matches.push(handle);
     }
     if (matches.length !== 1)
       throw new Error("確認用HTMLが1つ入ったフォルダーを選んでください。複数ある場合は作業ごとに分けてください。");
@@ -491,7 +506,7 @@ const AnswerScanFiles = (() => {
     catch (error) { try { await stream.abort(); } catch (_ignored) {} throw error; }
     return target;
   }
-  return {validId, workId, htmlName, resultName, pick, pickSave, open, write, writeSaved};
+  return {validId, workId, projectPrefix, htmlName, resultName, pick, pickSave, open, write, writeSaved};
 })();
 if (typeof module !== "undefined") module.exports = AnswerScanFiles;
 </script>
@@ -507,6 +522,8 @@ if (typeof module !== "undefined") module.exports = AnswerScanFiles;
     AnswerScanPackage.validate(data);
     const nextSession = new AnswerScanReview.Session(data.project);
     session = nextSession;
+    $("project-name").textContent = session.project.project_name || "";
+    $("project-name").hidden = !session.project.project_name;
     encryption = context;
     resultHandle = null;
     pages = new Map(data.pages.map(page => [page.page, page]));
