@@ -1,5 +1,7 @@
 # AnswerScan Light
 
+現在の公開バージョンは **1.0.0** です。
+
 ブラウザーだけで、学籍番号と数値解答の読み取り結果を目視確認するアプリです。
 
 **公開ページ:** https://murajun620-crypto.github.io/AnswerScan-Light/
