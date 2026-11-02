@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
-<title>AnswerScan Light v1.1.2 · 確認専用</title>
+<title>AnswerScan Light v1.2.0 · 確認専用</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%232565c7'/%3E%3Ctext x='20' y='29' text-anchor='middle' font-size='28' fill='white'%3EA%3C/text%3E%3C/svg%3E">
 <style>:root{font-family:"Yu Gothic UI","Meiryo",system-ui,sans-serif;color:#1c2e46;background:#f2f5f9;font-size:16px}
 .app-brand{display:inline-flex;align-items:baseline;gap:8px;white-space:nowrap}.app-version{font-size:14px;font-weight:500;color:#536985}
@@ -20,7 +20,7 @@
 </head>
 <body>
 <header>
-  <div class="app-heading"><span class="app-brand"><strong>AnswerScan Light</strong><span id="app-version" class="app-version">v1.1.2</span></span><span class="tag">確認専用 · このPC内で動作</span></div>
+  <div class="app-heading"><span class="app-brand"><strong>AnswerScan Light</strong><span id="app-version" class="app-version">v1.2.0</span></span><span class="tag">確認専用 · このPC内で動作</span></div>
   <div id="project-name" class="muted" hidden></div>
   <div class="toolbar">
     <button id="open-folder">確認用フォルダーを開く</button>
@@ -78,7 +78,7 @@
   <p id="summary" aria-live="polite"></p>
   <footer>
     <p id="save-state">変更はブラウザーのメモリーに保持します。こまめに「確認結果を保存」を押してください。</p>
-    <p>初回はファイル名が入力済みの保存画面で<strong>HTMLと同じフォルダー</strong>を選びます。2回目以降は同じファイルへ保存します。プロジェクト名_checked_ID.answerscan-project.jsonだけを担当者に返してください。再開するときはHTMLを開き、「途中の確認を開く」で保存済みJSONを選びます。</p>
+    <p>初回はファイル名が入力済みの保存画面で<strong>HTMLと同じフォルダー</strong>を選びます。2回目以降は同じファイルへ保存します。プロジェクト名_checked_ID.answerscan-project.jsonだけを担当者に返してください。担当者はAnswerScanで元プロジェクトを開き、「ファイル → Lightの確認結果を取り込む」からJSONを選びます。正答・配点は元プロジェクトの設定を使います。再開するときはHTMLを開き、「途中の確認を開く」で保存済みJSONを選びます。</p>
     <p class="muted">確認用ファイルには個人情報が含まれます。GitHubやChatGPTへ公開・添付しないでください。ファイルの内容はブラウザー内で処理します。</p>
   </footer>
   </div>
